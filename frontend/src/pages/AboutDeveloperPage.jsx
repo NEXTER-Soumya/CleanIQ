@@ -88,7 +88,7 @@ export default function AboutDeveloperPage() {
                   Soumya Biswas
                 </h1>
                 <p className="text-xl md:text-2xl text-secondary mb-8 flex items-center justify-center md:justify-start gap-3 font-medium">
-                  <Code size={24} className="text-accent" /> Full-Stack Developer
+                  <Code size={24} className="text-accent" /> Computer Science Engineer
                 </p>
                 
                 <div className="flex flex-wrap gap-4 justify-center md:justify-start">
