@@ -16,11 +16,12 @@ export default function LandingNavbar() {
           <span className="font-heading font-bold text-xl tracking-tight" style={{ color: 'var(--color-text-primary)' }}>CleanIQ</span>
         </Link>
         
-        <nav className="hidden md:flex items-center gap-8">
-          <Link to="/product" className="text-sm font-medium text-secondary hover:text-primary transition-colors">Product</Link>
-          <Link to="/how-it-works" className="text-sm font-medium text-secondary hover:text-primary transition-colors">How it works</Link>
-          <Link to="/tech-stack" className="text-sm font-medium text-secondary hover:text-primary transition-colors">Tech Stacks</Link>
-        </nav>
+        <div className="hidden md:flex items-center gap-6">
+          <Link to="/product" className="text-secondary hover:text-brand transition-colors text-sm font-medium">Product</Link>
+          <Link to="/how-it-works" className="text-secondary hover:text-brand transition-colors text-sm font-medium">How it works</Link>
+          <Link to="/tech-stack" className="text-secondary hover:text-brand transition-colors text-sm font-medium">Tech Stack</Link>
+          <Link to="/about-developer" className="text-secondary hover:text-brand transition-colors text-sm font-medium">About Developer</Link>
+        </div>
 
         <div className="flex items-center gap-4">
           <ThemeToggle />

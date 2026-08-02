@@ -17,6 +17,7 @@ import DatasetViewPage from './pages/DatasetViewPage';
 import ProductPage from './pages/ProductPage';
 import HowItWorksPage from './pages/HowItWorksPage';
 import TechStackPage from './pages/TechStackPage';
+import AboutDeveloperPage from './pages/AboutDeveloperPage';
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -27,6 +28,7 @@ function AnimatedRoutes() {
         <Route path="/product" element={<ProductPage />} />
         <Route path="/how-it-works" element={<HowItWorksPage />} />
         <Route path="/tech-stack" element={<TechStackPage />} />
+        <Route path="/about-developer" element={<AboutDeveloperPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route
           path="/dashboard"
