@@ -275,23 +275,21 @@ const generateInsights = async (req, res, next) => {
       return res.json(mockInsight);
     }
 
-    const prompt = `
-You are a data analyst AI. Analyze the following dataset summary statistics and provide 3-5 insightful written observations and suggest 1-3 charts that would be interesting to visualize.
+const prompt = `
+You are a data analyst AI. Analyze the following dataset summary statistics and provide 5 to 8 insightful written observations about the data.
 
 Summary Statistics (JSON):
 ${JSON.stringify(summaryStats, null, 2)}
 
 Respond ONLY with a valid JSON object (no markdown, no backticks). The JSON structure MUST be:
 {
-  "generatedText": ["insight 1", "insight 2", ...],
-  "chartConfigs": [
-    { "type": "bar" | "line" | "pie", "xKey": "columnNameForX", "yKey": "columnNameForY", "title": "Chart Title" }
-  ]
+  "generatedText": ["insight 1", "insight 2", "insight 3", "insight 4", "insight 5"],
+  "suggestedQuestions": ["Question 1?", "Question 2?", "Question 3?", "Question 4?"]
 }
 `;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-3.5-flash',
       contents: prompt,
     });
 
@@ -315,7 +313,8 @@ Respond ONLY with a valid JSON object (no markdown, no backticks). The JSON stru
     const insight = await Insight.create({
       datasetId: id,
       generatedText: parsedResult.generatedText || [],
-      chartConfigs: parsedResult.chartConfigs || []
+      chartConfigs: parsedResult.chartConfigs || [],
+      suggestedQuestions: parsedResult.suggestedQuestions || []
     });
 
     dataset.status = 'insights_generated';
@@ -494,4 +493,102 @@ const downloadDataset = async (req, res, next) => {
   }
 };
 
-module.exports = { uploadDataset, getDatasets, getDatasetReport, updateColumn, cleanDataset, generateInsights, getInsights, getDatasetData, deleteDataset, downloadDataset };
+const askQuestion = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { prompt: userPrompt } = req.body;
+    
+    if (!userPrompt) {
+      return res.status(400).json({ error: 'Prompt is required' });
+    }
+
+    const dataset = await Dataset.findById(id);
+    if (!dataset) return res.status(404).json({ error: 'Dataset not found' });
+    if (dataset.userId.toString() !== req.user._id.toString()) return res.status(403).json({ error: 'Not authorized' });
+
+    const dataPath = dataset.cleanedPath || dataset.storagePath;
+    if (!fs.existsSync(dataPath)) return res.status(404).json({ error: 'Dataset file not found' });
+
+    const ext = path.extname(dataPath).toLowerCase();
+    let rows = [];
+    if (ext === '.csv') {
+      const csvData = fs.readFileSync(dataPath, 'utf8');
+      rows = Papa.parse(csvData, { header: true, skipEmptyLines: true }).data;
+    } else {
+      const workbook = xlsx.readFile(dataPath);
+      rows = xlsx.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+    }
+    if (rows.length === 0) return res.status(400).json({ error: 'Dataset is empty' });
+
+    const headers = Object.keys(rows[0]);
+    const summaryStats = {};
+    headers.forEach(header => {
+      summaryStats[header] = { type: 'unknown', nonNullCount: 0, sampleValues: [] };
+    });
+
+    for (const header of headers) {
+      const values = rows.map(r => r[header]).filter(v => v !== null && v !== undefined && v !== '');
+      summaryStats[header].nonNullCount = values.length;
+      if (values.length === 0) continue;
+
+      const numericValues = values.map(v => Number(v)).filter(v => !isNaN(v));
+      if (numericValues.length > values.length * 0.8) {
+        summaryStats[header].type = 'numeric';
+        const sum = numericValues.reduce((a, b) => a + b, 0);
+        summaryStats[header].mean = sum / numericValues.length;
+        summaryStats[header].min = Math.min(...numericValues);
+        summaryStats[header].max = Math.max(...numericValues);
+      } else {
+        summaryStats[header].type = 'categorical';
+        const counts = {};
+        values.forEach(v => { counts[v] = (counts[v] || 0) + 1; });
+        summaryStats[header].topCategories = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5).map(entry => `${entry[0]} (${entry[1]})`);
+      }
+    }
+
+    if (!ai) return res.status(500).json({ error: 'AI not configured' });
+
+    const prompt = `
+You are a data analyst AI. The user has a dataset with the following summary statistics:
+${JSON.stringify(summaryStats, null, 2)}
+
+The user asks: "${userPrompt}"
+
+Answer their question by providing 1 or 2 written insights answering their question directly, and exactly 1 chart configuration that visually represents the answer. If a chart doesn't make sense, you can omit the chart config.
+IMPORTANT: When grouping data (like "average age by gender"), you MUST specify "aggregation": "average".
+
+Respond ONLY with a valid JSON object:
+{
+  "generatedText": ["your answer..."],
+  "chartConfigs": [
+    { "type": "bar" | "line" | "pie", "xKey": "columnNameForX", "yKey": "columnNameForY", "title": "Chart Title", "aggregation": "sum" | "average" | "count" | "none" }
+  ]
+}
+`;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.5-flash',
+      contents: prompt,
+    });
+
+    let textResponse = response.text || response.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    if (textResponse.startsWith('```json')) {
+      textResponse = textResponse.replace(/^```json\n?/, '').replace(/\n?```$/, '');
+    } else if (textResponse.startsWith('```')) {
+      textResponse = textResponse.replace(/^```\n?/, '').replace(/\n?```$/, '');
+    }
+    
+    let parsedResult;
+    try {
+      parsedResult = JSON.parse(textResponse);
+    } catch (err) {
+      return res.status(500).json({ error: 'AI returned invalid JSON' });
+    }
+
+    res.status(200).json(parsedResult);
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { uploadDataset, getDatasets, getDatasetReport, updateColumn, cleanDataset, generateInsights, getInsights, getDatasetData, deleteDataset, downloadDataset, askQuestion };

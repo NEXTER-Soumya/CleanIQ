@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Brain, RefreshCw, BarChart3, Database, AlertCircle, ArrowLeft } from 'lucide-react';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { getInsights, generateInsights } from '../api/insights';
+import { getInsights, generateInsights, askQuestion } from '../api/insights';
 import { getDatasetData } from '../api/datasets';
 import PageWrapper from '../components/PageWrapper';
 import DocumentTitle from '../components/DocumentTitle';
@@ -21,6 +21,11 @@ export default function InsightsDashboard() {
   const [generating, setGenerating] = useState(false);
   const [requiresGeneration, setRequiresGeneration] = useState(false);
   const [error, setError] = useState(null);
+  
+  // Custom Prompt State
+  const [customPrompt, setCustomPrompt] = useState('');
+  const [askingPrompt, setAskingPrompt] = useState(false);
+  const [customInsights, setCustomInsights] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -81,26 +86,40 @@ export default function InsightsDashboard() {
   const renderChart = (config, index) => {
     if (!data || data.length === 0) return null;
 
-    const { type, xKey, yKey, title } = config;
+    const { type, xKey, yKey, title, aggregation = 'sum' } = config;
 
-    // Aggregate data for categorical charts if many rows
-    // (A simple approach: just use the raw data if it's small, or aggregate by xKey if it's string)
-    // For simplicity, we assume Recharts handles it or data is already reasonable.
-    // In a real app, we'd do smart aggregation here based on data types.
     let chartData = data;
     
-    // Grouping logic for better visuals if xKey is categorical
+    // Grouping logic based on aggregation
     const isXString = data.length > 0 && typeof data[0][xKey] === 'string';
     if (isXString && (type === 'bar' || type === 'pie')) {
-      const counts = {};
+      const groups = {};
       data.forEach(row => {
         const key = row[xKey] || 'Unknown';
-        counts[key] = (counts[key] || 0) + (yKey ? Number(row[yKey]) || 1 : 1);
+        if (!groups[key]) groups[key] = { sum: 0, count: 0 };
+        
+        groups[key].count += 1;
+        if (yKey && row[yKey] !== undefined && row[yKey] !== null && !isNaN(row[yKey])) {
+          groups[key].sum += Number(row[yKey]);
+        }
       });
-      chartData = Object.keys(counts).map(key => ({
-        [xKey]: key,
-        [yKey || 'value']: counts[key]
-      })).sort((a, b) => b[yKey || 'value'] - a[yKey || 'value']).slice(0, 10);
+      
+      chartData = Object.keys(groups).map(key => {
+        let val = 0;
+        if (aggregation === 'average') {
+          val = groups[key].count > 0 ? (groups[key].sum / groups[key].count) : 0;
+          val = Math.round(val * 100) / 100; // round to 2 decimals
+        } else if (aggregation === 'count') {
+          val = groups[key].count;
+        } else {
+          val = groups[key].sum;
+        }
+        
+        return {
+          [xKey]: key,
+          [yKey || 'value']: val
+        };
+      }).sort((a, b) => b[yKey || 'value'] - a[yKey || 'value']).slice(0, 10);
     }
 
     const yDataKey = yKey || 'value';
@@ -160,7 +179,7 @@ export default function InsightsDashboard() {
 
     return (
       <motion.div
-        key={index}
+        key={`${title}-${index}`}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: index * 0.1 }}
@@ -170,6 +189,28 @@ export default function InsightsDashboard() {
         {renderChartElement()}
       </motion.div>
     );
+  };
+
+  const handleAskQuestion = async (e, overridePrompt = null) => {
+    if (e) e.preventDefault();
+    const promptToUse = overridePrompt || customPrompt;
+    if (!promptToUse.trim() || askingPrompt) return;
+    
+    try {
+      setAskingPrompt(true);
+      const result = await askQuestion(id, promptToUse);
+      setCustomInsights(prev => [result, ...prev]);
+      if (!overridePrompt) setCustomPrompt('');
+    } catch (err) {
+      toast.error('Failed to answer your question.');
+    } finally {
+      setAskingPrompt(false);
+    }
+  };
+
+  const handleSuggestionClick = (question) => {
+    setCustomPrompt(question);
+    handleAskQuestion(null, question);
   };
 
   if (loading || generating) {
@@ -209,7 +250,7 @@ export default function InsightsDashboard() {
             <Brain className="text-brand" size={36} />
             AI Insights
           </h1>
-          <p className="text-secondary mt-2 text-lg">Powered by Gemini 2.5 Flash</p>
+          <p className="text-secondary mt-1">Powered by Gemini 3.5 Flash</p>
         </div>
         
         <button
@@ -252,6 +293,75 @@ export default function InsightsDashboard() {
         </div>
       ) : insights && (
         <>
+          {/* Custom Prompt Input */}
+          <div className="mb-10 bg-surface border border-brand/30 rounded-2xl p-6 shadow-sm relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-1 h-full bg-brand" />
+            <h2 className="text-xl font-bold font-heading mb-4 flex items-center gap-2" style={{ color: 'var(--color-text-primary)' }}>
+              Ask your Data
+            </h2>
+            <form onSubmit={handleAskQuestion} className="flex gap-3">
+              <input
+                type="text"
+                value={customPrompt}
+                onChange={(e) => setCustomPrompt(e.target.value)}
+                placeholder="e.g. Show me the average age of passengers by gender"
+                className="flex-1 bg-background border border-divider rounded-xl px-4 py-3 text-primary focus:outline-none focus:ring-2 focus:ring-brand/50 transition-all"
+                disabled={askingPrompt}
+              />
+              <button
+                type="submit"
+                disabled={askingPrompt || !customPrompt.trim()}
+                className="bg-brand hover:bg-brand-hover text-white px-6 py-3 rounded-xl font-medium transition-colors disabled:opacity-50 flex items-center gap-2"
+              >
+                {askingPrompt ? <RefreshCw size={18} className="animate-spin" /> : <Brain size={18} />}
+                Ask
+              </button>
+            </form>
+
+            {insights.suggestedQuestions && insights.suggestedQuestions.length > 0 && (
+              <div className="mt-6">
+                <p className="text-sm font-medium text-secondary mb-3">Suggested questions:</p>
+                <div className="flex flex-wrap gap-2">
+                  {insights.suggestedQuestions.map((question, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => handleSuggestionClick(question)}
+                      disabled={askingPrompt}
+                      className="px-4 py-2 bg-brand/5 hover:bg-brand/10 border border-brand/20 text-brand rounded-full text-sm font-medium transition-colors disabled:opacity-50"
+                    >
+                      {question}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Render Custom Insights if any */}
+          {customInsights.length > 0 && (
+            <div className="mb-12 border-b border-divider pb-12">
+              <h2 className="text-xl font-bold font-heading mb-6 flex items-center gap-2" style={{ color: 'var(--color-text-primary)' }}>
+                Your Custom Insights
+              </h2>
+              <div className="flex flex-col gap-8">
+                {customInsights.map((customInsight, idx) => (
+                  <div key={idx} className="bg-brand/5 border border-brand/20 rounded-2xl p-6 shadow-sm">
+                    {customInsight.generatedText?.map((text, i) => (
+                      <p key={i} style={{ color: 'var(--color-text-primary)' }} className="mb-6 font-medium text-lg leading-relaxed">
+                        {text}
+                      </p>
+                    ))}
+                    {customInsight.chartConfigs && customInsight.chartConfigs.length > 0 && (
+                      <div className="grid lg:grid-cols-2 gap-8">
+                        {customInsight.chartConfigs.map((config, index) => renderChart(config, `custom-${idx}-${index}`))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Text Insights */}
           <div className="mb-12">
             <h2 className="text-xl font-bold font-heading mb-6 flex items-center gap-2" style={{ color: 'var(--color-text-primary)' }}>
@@ -275,19 +385,6 @@ export default function InsightsDashboard() {
               ))}
             </div>
           </div>
-
-          {/* Charts */}
-          {insights.chartConfigs && insights.chartConfigs.length > 0 && (
-            <div>
-              <h2 className="text-xl font-bold font-heading mb-6 flex items-center gap-2" style={{ color: 'var(--color-text-primary)' }}>
-                <BarChart3 size={20} className="text-primary" />
-                Suggested Visualizations
-              </h2>
-              <div className="grid lg:grid-cols-2 gap-8">
-                {insights.chartConfigs.map((config, index) => renderChart(config, index))}
-              </div>
-            </div>
-          )}
         </>
       )}
     </PageWrapper>

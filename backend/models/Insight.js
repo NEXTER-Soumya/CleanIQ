@@ -16,6 +16,11 @@ const chartConfigSchema = new mongoose.Schema({
   title: {
     type: String,
     required: true
+  },
+  aggregation: {
+    type: String,
+    enum: ['sum', 'average', 'count', 'none'],
+    default: 'sum'
   }
 });
 
@@ -33,6 +38,9 @@ const insightSchema = new mongoose.Schema({
     type: [chartConfigSchema],
     default: []
   },
+  suggestedQuestions: [{
+    type: String
+  }],
   generatedAt: {
     type: Date,
     default: Date.now

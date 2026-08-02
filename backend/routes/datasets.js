@@ -36,6 +36,7 @@ router.patch('/:id/columns/:columnId', datasetController.updateColumn);
 router.post('/:id/clean', datasetController.cleanDataset);
 router.get('/:id/insights', datasetController.getInsights);
 router.post('/:id/insights', tierLimit, datasetController.generateInsights);
+router.post('/:id/insights/ask', tierLimit, datasetController.askQuestion);
 router.delete('/:id', datasetController.deleteDataset);
 router.get('/:id/download', datasetController.downloadDataset);
 
