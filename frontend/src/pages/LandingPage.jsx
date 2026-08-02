@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { ArrowRight, Sparkles, Database, BarChart3, Users, Zap, Shield, ChevronDown } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api/index';
 import PageWrapper from '../components/PageWrapper';
 import DocumentTitle from '../components/DocumentTitle';
 
@@ -44,7 +44,7 @@ export default function LandingPage() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/stats');
+        const response = await api.get('/stats');
         if (response.data.success) {
           setDynamicStats(response.data.data);
         }
