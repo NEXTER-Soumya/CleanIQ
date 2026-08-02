@@ -20,7 +20,7 @@ export default function LandingNavbar() {
           <Link to="/product" className="text-secondary hover:text-brand transition-colors text-sm font-medium">Product</Link>
           <Link to="/how-it-works" className="text-secondary hover:text-brand transition-colors text-sm font-medium">How it works</Link>
           <Link to="/tech-stack" className="text-secondary hover:text-brand transition-colors text-sm font-medium">Tech Stack</Link>
-          <Link to="/about-developer" className="text-secondary hover:text-brand transition-colors text-sm font-medium">About Developer</Link>
+          <Link to="/about-developer" className="text-secondary hover:text-brand transition-colors text-sm font-medium">Dev</Link>
         </div>
 
         <div className="flex items-center gap-4">
