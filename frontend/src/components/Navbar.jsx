@@ -42,6 +42,9 @@ export default function Navbar() {
 
           {isAuthenticated && (
             <>
+              <Link to="/about-developer" className="text-sm font-medium hover:text-brand transition-colors text-secondary hidden sm:block">
+                About
+              </Link>
               <Link to="/dashboard" className="text-sm font-medium hover:text-brand transition-colors text-secondary hidden sm:block">
                 Dashboard
               </Link>
@@ -73,6 +76,9 @@ export default function Navbar() {
                         <p className="text-xs text-secondary truncate">{user?.profession || (user?.activePlan === 'pro' ? 'Pro Plan' : 'Free Plan')}</p>
                       </div>
                       
+                      <Link to="/about-developer" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-3 px-4 py-2 text-sm text-secondary hover:text-primary hover:bg-surface-elevated transition-colors">
+                        <User size={16} /> About Developer
+                      </Link>
                       <Link to="/settings" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-3 px-4 py-2 text-sm text-secondary hover:text-primary hover:bg-surface-elevated transition-colors">
                         <Settings size={16} /> Profile Settings
                       </Link>
