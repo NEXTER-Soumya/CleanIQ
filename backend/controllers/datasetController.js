@@ -184,6 +184,12 @@ const cleanDataset = async (req, res, next) => {
 
 const generateInsights = async (req, res, next) => {
   try {
+    if (req.user.activePlan !== 'pro') {
+      return res.status(402).json({
+        error: 'pro_tier_required',
+        message: "Generating AI Insights requires a CleanIQ Pro subscription."
+      });
+    }
     const { id } = req.params;
     const dataset = await Dataset.findById(id);
     if (!dataset) {
@@ -495,6 +501,12 @@ const downloadDataset = async (req, res, next) => {
 
 const askQuestion = async (req, res, next) => {
   try {
+    if (req.user.activePlan !== 'pro') {
+      return res.status(402).json({
+        error: 'pro_tier_required',
+        message: "Asking custom AI questions requires a CleanIQ Pro subscription."
+      });
+    }
     const { id } = req.params;
     const { prompt: userPrompt } = req.body;
     
