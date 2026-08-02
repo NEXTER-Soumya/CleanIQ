@@ -85,7 +85,7 @@ function AnimatedRoutes() {
 
 function Layout() {
   const location = useLocation();
-  const isMarketingPage = ['/', '/product', '/how-it-works', '/tech-stack'].includes(location.pathname);
+  const isMarketingPage = ['/', '/product', '/how-it-works', '/tech-stack', '/about-developer'].includes(location.pathname);
 
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'var(--color-bg)', color: 'var(--color-text-primary)' }}>
