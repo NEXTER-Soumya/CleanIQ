@@ -1,5 +1,4 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/NEXTER-Soumya/CleanIQ/master/frontend/public/favicon.ico" alt="CleanIQ Logo" width="80" />
   <h1>CleanIQ</h1>
   <p><strong>Transform messy data into beautiful insights, instantly.</strong></p>
   <p>The fastest, AI-powered platform to clean, merge, and visualize datasets without writing a single line of code.</p>
