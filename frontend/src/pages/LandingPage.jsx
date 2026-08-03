@@ -346,7 +346,7 @@ export default function LandingPage() {
           >
             <div className="transform translate-z-20">
               <h2 className="text-4xl md:text-5xl font-bold font-heading mb-6 text-primary">Ready to stop wrestling with spreadsheets?</h2>
-              <p className="text-xl text-secondary mb-10 max-w-2xl mx-auto">Join analysts and founders using CleanIQ to prepare their data in seconds.</p>
+              <p className="text-xl text-secondary mb-10 max-w-2xl mx-auto">Experience the fastest way to clean, format, and visualize your datasets without writing a single line of code.</p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link 
                   to="/login?mode=signup"
