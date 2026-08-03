@@ -17,8 +17,6 @@ import DatasetViewPage from './pages/DatasetViewPage';
 import ProductPage from './pages/ProductPage';
 import HowItWorksPage from './pages/HowItWorksPage';
 import TechStackPage from './pages/TechStackPage';
-import AboutDeveloperPage from './pages/AboutDeveloperPage';
-
 function AnimatedRoutes() {
   const location = useLocation();
   return (
@@ -28,7 +26,6 @@ function AnimatedRoutes() {
         <Route path="/product" element={<ProductPage />} />
         <Route path="/how-it-works" element={<HowItWorksPage />} />
         <Route path="/tech-stack" element={<TechStackPage />} />
-        <Route path="/about-developer" element={<AboutDeveloperPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route
           path="/dashboard"
@@ -85,7 +82,7 @@ function AnimatedRoutes() {
 
 function Layout() {
   const location = useLocation();
-  const isMarketingPage = ['/', '/product', '/how-it-works', '/tech-stack', '/about-developer'].includes(location.pathname);
+  const isMarketingPage = ['/', '/product', '/how-it-works', '/tech-stack'].includes(location.pathname);
 
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'var(--color-bg)', color: 'var(--color-text-primary)' }}>

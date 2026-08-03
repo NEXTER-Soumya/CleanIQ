@@ -361,6 +361,21 @@ export default function LandingPage() {
         </div>
       </section>
 
+
+      {/* Footer */}
+      <footer className="border-t border-divider py-10 bg-surface">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between">
+          <div className="flex items-center gap-2 mb-4 md:mb-0">
+            <div className="bg-brand text-white p-1 rounded-lg">
+              <Sparkles size={16} />
+            </div>
+            <span className="font-heading font-bold text-lg tracking-tight text-primary">CleanIQ</span>
+          </div>
+          <p className="text-secondary text-sm font-medium">
+            Created by - <a href="https://biswasoumya.vercel.app/" target="_blank" rel="noopener noreferrer" className="text-brand hover:text-brand-hover underline underline-offset-4 decoration-brand/30 hover:decoration-brand transition-colors">Soumya Biswas</a>
+          </p>
+        </div>
+      </footer>
     </PageWrapper>
   );
 }

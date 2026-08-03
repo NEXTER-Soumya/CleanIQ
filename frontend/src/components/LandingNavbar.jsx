@@ -1,29 +1,8 @@
-import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { LayoutDashboard } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 
 export default function LandingNavbar() {
-  const [showDev, setShowDev] = useState(() => {
-    return localStorage.getItem('showDevMenu') === 'true';
-  });
-
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      // Check for Ctrl + Shift + I (Windows/Linux) or Cmd + Option + I (Mac)
-      if (
-        (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'i') ||
-        (e.metaKey && e.altKey && e.key.toLowerCase() === 'i')
-      ) {
-        setShowDev(true);
-        localStorage.setItem('showDevMenu', 'true');
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
   return (
     <header 
       className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md border-b transition-colors"
@@ -41,9 +20,6 @@ export default function LandingNavbar() {
           <Link to="/product" className="text-secondary hover:text-brand transition-colors text-sm font-medium">Product</Link>
           <Link to="/how-it-works" className="text-secondary hover:text-brand transition-colors text-sm font-medium">How it works</Link>
           <Link to="/tech-stack" className="text-secondary hover:text-brand transition-colors text-sm font-medium">Stack</Link>
-          {showDev && (
-            <Link to="/about-developer" className="text-secondary hover:text-brand transition-colors text-sm font-medium animate-fade-in">Dev</Link>
-          )}
         </div>
 
         <div className="flex items-center gap-4 relative z-10">
