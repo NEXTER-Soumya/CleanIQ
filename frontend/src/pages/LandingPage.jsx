@@ -1,7 +1,7 @@
 import { Link, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
-import { ArrowRight, Sparkles, Database, BarChart3, Users, Zap, Shield, ChevronDown } from 'lucide-react';
+import { ArrowRight, Sparkles, Database, BarChart3, Users, Zap, Shield, ChevronDown, LayoutDashboard } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import api from '../api/index';
 import PageWrapper from '../components/PageWrapper';
@@ -366,8 +366,8 @@ export default function LandingPage() {
       <footer className="border-t border-divider py-10 bg-surface">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between">
           <div className="flex items-center gap-2 mb-4 md:mb-0">
-            <div className="bg-brand text-white p-1 rounded-lg">
-              <Sparkles size={16} />
+            <div className="bg-brand text-white p-1.5 rounded-lg">
+              <LayoutDashboard size={24} />
             </div>
             <span className="font-heading font-bold text-lg tracking-tight text-primary">CleanIQ</span>
           </div>
